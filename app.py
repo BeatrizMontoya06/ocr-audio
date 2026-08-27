@@ -5,28 +5,13 @@ import numpy as np
 import pytesseract
 from gtts import gTTS
 
-
-# -----------------------------------
-# CONFIGURACIÓN
-# -----------------------------------
-
 st.set_page_config(
     page_title="Imagen a Audio",
     page_icon="🔊"
 )
 
-
-# -----------------------------------
-# TÍTULO
-# -----------------------------------
-
 st.title("🖼️ Transcripción de Imagen a Audio")
 st.write("Toma una foto o carga una imagen para convertir su texto en audio.")
-
-
-# -----------------------------------
-# SELECCIONAR FUENTE DE IMAGEN
-# -----------------------------------
 
 st.subheader("1. Selecciona una imagen")
 
@@ -35,33 +20,18 @@ opcion = st.radio(
     ("Cámara", "Cargar imagen")
 )
 
-
-# -----------------------------------
-# CÁMARA
-# -----------------------------------
-
 img_file_buffer = None
 
 if opcion == "Cámara":
 
     img_file_buffer = st.camera_input("Toma una foto")
-
-
-# -----------------------------------
-# CARGAR IMAGEN
-# -----------------------------------
-
+    
 else:
 
     img_file_buffer = st.file_uploader(
         "Selecciona una imagen",
         type=["png", "jpg", "jpeg"]
     )
-
-
-# -----------------------------------
-# PROCESAR IMAGEN
-# -----------------------------------
 
 if img_file_buffer is not None:
 
@@ -72,13 +42,11 @@ if img_file_buffer is not None:
         cv2.IMREAD_COLOR
     )
 
-    # Convertir la imagen a RGB
     img_rgb = cv2.cvtColor(
         cv2_img,
         cv2.COLOR_BGR2RGB
     )
-
-    # Mostrar imagen
+    
     st.subheader("2. Imagen seleccionada")
 
     st.image(
@@ -86,11 +54,6 @@ if img_file_buffer is not None:
         caption="Imagen",
         use_container_width=True
     )
-
-
-    # -----------------------------------
-    # RECONOCIMIENTO DEL TEXTO
-    # -----------------------------------
 
     st.subheader("3. Texto transcrito")
 
@@ -104,10 +67,6 @@ if img_file_buffer is not None:
             height=150
         )
 
-
-        # -----------------------------------
-        # CONVERTIR TEXTO A AUDIO
-        # -----------------------------------
 
         st.subheader("4. Escuchar texto")
 
@@ -139,11 +98,6 @@ if img_file_buffer is not None:
             "No se encontró texto en la imagen. "
             "Intenta con una imagen más clara."
         )
-
-
-# -----------------------------------
-# INFORMACIÓN LATERAL
-# -----------------------------------
 
 with st.sidebar:
 
