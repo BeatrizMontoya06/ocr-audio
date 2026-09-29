@@ -6,19 +6,19 @@ from gtts import gTTS
 import base64
 import io
 
-# Configuración de página
+# Configuración inicial de la página
 st.set_page_config(
-    page_title="Bee's Vision OCR v1.0 - Retro Y2K",
+    page_title="Bee's OCR v1.0 - Retro Y2K Edition",
     page_icon="🐝",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Inicializar estado del audio
+# Estado para la persistencia del audio en la sesión
 if "audio_b64" not in st.session_state:
     st.session_state.audio_b64 = None
 
-# Inyección CSS Global para la estética Y2K
+# Estilos CSS con temática Retro Y2K / Windows 98
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
@@ -70,7 +70,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Encabezado Ventana Y2K
+# Ventana con interfaz Y2K y contexto del proyecto
 y2k_header = """
 <!DOCTYPE html>
 <html lang="es">
@@ -94,16 +94,16 @@ y2k_header = """
             font-size: 20px; padding: 4px; border: 2px inset #808080; margin: 8px 0;
         }
         .retro-info {
-            border: 2px inset #ffffff; background: #e0e0e0; padding: 8px; margin-bottom: 8px;
+            border: 2px inset #ffffff; background: #e0e0e0; padding: 10px; margin-bottom: 8px;
         }
         .retro-info h2 {
-            margin: 0 0 4px 0; font-size: 13px; background: #000080; color: #fff; padding: 2px 6px;
+            margin: 0 0 6px 0; font-size: 13px; background: #000080; color: #fff; padding: 3px 6px;
         }
     </style>
 </head>
 <body>
     <div class="title-bar">
-        <span>🐝 C:\\BEES_VISION\\v1.0\\OCR_TO_SPEECH.EXE</span>
+        <span>🐝 C:\\BEES_OCR\\v1.0\\VISION_READER.EXE</span>
         <div>
             <div class="win-btn">_</div>
             <div class="win-btn">□</div>
@@ -111,63 +111,78 @@ y2k_header = """
         </div>
     </div>
     <marquee scrollamount="5">
-        *** BEE'S VISION OCR Y2K *** ESCANEO INTELIGENTE DE IMÁGENES Y LECTURA EN VOZ ALTA ***
+        *** BEE'S OCR v1.0 *** RECONOCIMIENTO ÓPTICO DE CARACTERES Y SÍNTESIS DE VOZ ***
     </marquee>
     <div class="retro-info">
-        <h2>🎯 PROPÓSITO DEL SISTEMA (ACCESIBILIDAD DIGITAL)</h2>
-        <p style="font-size: 12px; margin: 2px 0;">
-            Herramienta diseñada para asistir a personas con visibilidad reducida o dificultades lectoras. Captura cualquier texto impreso (documentos, carteles, libros) con tu cámara o archivo y escúchalo al instante en audio.
+        <h2>📜 PROPÓSITO DEL SISTEMA Y CONTEXTO DE USO</h2>
+        <p style="font-size: 12px; margin: 2px 0; line-height: 1.4;">
+            <b>Bee's OCR</b> es una solución asistencial digital diseñada para la digitalización instantánea de material impreso. Su propósito principal es mejorar la <b>accesibilidad para personas con discapacidad visual, dislexia o dificultades de lectura</b>, permitiendo transformar libros, documentos, carteles o empaques en audio ejecutable en tiempo real mediante visión por computadora.
         </p>
     </div>
 </body>
 </html>
 """
-st.components.v1.html(y2k_header, height=195)
+st.components.v1.html(y2k_header, height=210)
 
-# Selección de Origen de Imagen
+# ---------------------------------------------------------
+# 1. SELECCIÓN DE ENTRADA
+# ---------------------------------------------------------
 st.markdown("### 📷 1. Captura u Obtención de Imagen")
 opcion = st.radio(
-    "Selecciona el método de entrada:",
-    ("Subir Archivo de Imagen", "Usar Cámara en Vivo"),
+    "Selecciona el método de entrada para la captura:",
+    ("Subir Archivo de Imagen", "Cámara Web en Vivo"),
     horizontal=True
 )
 
 img_file_buffer = None
 
-if opcion == "Usar Cámara en Vivo":
-    img_file_buffer = st.camera_input("Toma una fotografía al texto")
+if opcion == "Cámara Web en Vivo":
+    img_file_buffer = st.camera_input("Capturar fotografía al texto impreso")
 else:
     img_file_buffer = st.file_uploader(
-        "Selecciona un archivo de imagen (PNG, JPG, JPEG):",
+        "Selecciona un archivo de imagen (Formatos admitidos: PNG, JPG, JPEG):",
         type=["png", "jpg", "jpeg"]
     )
 
+# ---------------------------------------------------------
+# 2. PROCESAMIENTO Y VISUALIZACIÓN
+# ---------------------------------------------------------
 if img_file_buffer is not None:
-    # Decodificar imagen
+    # Decodificación de la imagen cargada con OpenCV
     bytes_data = img_file_buffer.getvalue()
     cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
     img_rgb = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
 
-    st.markdown("### 🖼️ 2. Vista Previa de la Imagen")
-    st.image(img_rgb, caption="Imagen cargada", use_container_width=True)
+    st.markdown("### 🖼️ 2. Imagen en Inspección")
+    st.image(img_rgb, caption="Muestra cargada correctamente", use_container_width=True)
 
-    # Procesar OCR con Tesseract
-    st.markdown("### 🔍 3. Escaneo y Extracción OCR")
-    with st.spinner("Procesando la imagen con motor Tesseract..."):
-        text = pytesseract.image_to_string(img_rgb)
+    # ---------------------------------------------------------
+    # 3. EXTRACCIÓN DE TEXTO (OCR CON TESSERACT)
+    # ---------------------------------------------------------
+    st.markdown("### 🔍 3. Escaneo OCR (Tesseract Engine)")
+    with st.spinner("Procesando matriz de imagen y extrayendo caracteres..."):
+        try:
+            # Intento de lectura con soporte de idioma español e inglés
+            extracted_text = pytesseract.image_to_string(img_rgb, lang="spa+eng")
+        except Exception:
+            # Fallback en caso de que solo esté disponible el paquete genérico
+            extracted_text = pytesseract.image_to_string(img_rgb)
 
-    if text.strip():
+    if extracted_text.strip():
         st.text_area(
             "Texto detectado:",
-            value=text,
+            value=extracted_text,
             height=140
         )
 
-        st.markdown("### 🔊 4. Generación de Audio")
-        if st.button("▶️ ESCUCHAR TEXTO EN LA PÁGINA"):
-            with st.spinner("Sintetizando voz..."):
+        # ---------------------------------------------------------
+        # 4. SÍNTESIS DE VOZ Y REPRODUCCIÓN
+        # ---------------------------------------------------------
+        st.markdown("### 🔊 4. Conversión a Audio Asistivo")
+        if st.button("▶️ GENERAR Y ESCUCHAR AUDIO EN VIVO"):
+            with st.spinner("Sintetizando voz en alta definición..."):
                 try:
-                    tts = gTTS(text=text, lang="es", slow=False)
+                    tts = gTTS(text=extracted_text, lang="es", slow=False)
                     fp = io.BytesIO()
                     tts.write_to_fp(fp)
                     fp.seek(0)
@@ -177,9 +192,9 @@ if img_file_buffer is not None:
                     st.session_state.audio_b64 = b64
 
                 except Exception as e:
-                    st.error(f"Error generando el audio: {e}")
+                    st.error(f"Error durante el proceso de síntesis de voz: {e}")
 
-        # Reproductor Autoplay Y2K
+        # Reproductor incrustado HTML5
         if st.session_state.audio_b64 is not None:
             player_html = f"""
             <!DOCTYPE html>
@@ -203,7 +218,7 @@ if img_file_buffer is not None:
             </head>
             <body>
                 <div class="player-card">
-                    <div class="status">🔊 REPRODUCIENDO TEXTO ESCANEADO...</div>
+                    <div class="status">🔊 REPRODUCIENDO TEXTO DETECTADO POR BEE'S OCR...</div>
                     <audio controls autoplay>
                         <source src="data:audio/mp3;base64,{st.session_state.audio_b64}" type="audio/mp3">
                     </audio>
@@ -214,4 +229,4 @@ if img_file_buffer is not None:
             st.components.v1.html(player_html, height=120)
 
     else:
-        st.warning("⚠️ No se encontró texto inteligible en la imagen. Intenta tomar una fotografía con mayor iluminación o enfoque.")
+        st.warning("⚠️ No se logró identificar texto legible en la imagen. Asegúrate de enfocar bien el texto y contar con una iluminación adecuada.")
